@@ -1,25 +1,29 @@
-import useAutocomplete from "../../hooks/useAutocomplete";
-import DOMPurify from "dompurify";
+import { useRef } from "react";
+import { useOutsideAlerter } from "../../hooks/useOutside";
 
-export default function OptionsList({ onBlur }: { onBlur: () => void }) {
-  const { options, text, setText } = useAutocomplete();
-  const onChangeOpt = (opt: string) => {
-    setText(opt);
-    onBlur();
-  };
+interface OptionsListType {
+  text: string;
+  onChange: (text: string) => Promise<void>;
+  options: string[];
+  onBlur: () => void;
+}
+
+export default function OptionsList({ options, text, onChange, onBlur }: OptionsListType) {
+  const wrapperRef = useRef(null);
+  useOutsideAlerter(wrapperRef, () => setTimeout(() => onBlur(), 100));
 
   return (
-    <ul className="autocomplete__options-list" data-testid="options-list">
+    <ul className="autocomplete__options-list" data-testid="options-list" ref={wrapperRef}>
       {options.map((opt) => (
         <li
           aria-label={opt}
           tabIndex={0}
           className="autocomplete__option-item"
           key={opt}
-          onClick={() => onChangeOpt(opt)}
-          onKeyDown={(evt) => evt.key === "Enter" && onChangeOpt(opt)}
+          onClick={() => onChange(opt)}
+          onKeyDown={(evt) => evt.key === "Enter" && onChange(opt)}
           dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(opt.replace(new RegExp(text, "ig"), `<mark>${text}</mark>`)),
+            __html: opt.replace(new RegExp(text, "ig"), `<mark>${text}</mark>`),
           }}
         />
       ))}

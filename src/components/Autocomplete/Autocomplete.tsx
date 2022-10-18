@@ -1,10 +1,17 @@
-import React from "react";
-import useAutocomplete from "../../hooks/useAutocomplete";
+import React, { useState } from "react";
 import OptionsList from "./OptionsList";
 
-export default function Autocomplete() {
-  const { setText, text, error, loading, isOptionsListVisible, setIsInputFocused } =
-    useAutocomplete();
+export default function Autocomplete({
+  text,
+  onChange,
+  options,
+}: {
+  text: string;
+  onChange: (text: string) => Promise<void>;
+  options: string[];
+}) {
+  const [focused, setFocused] = useState(false);
+  const isOptionsListVisible = focused && options.length > 0;
 
   return (
     <div className="autocomplete__wrapper">
@@ -14,21 +21,18 @@ export default function Autocomplete() {
           id="searchText"
           data-testid="search-input"
           value={text}
-          onChange={(evt) => setText(evt.target.value)}
-          onFocus={() => setIsInputFocused(true)}
+          onChange={(evt) => onChange(evt.target.value)}
+          onFocus={() => setFocused(true)}
           autoComplete="off"
         />
         {isOptionsListVisible && (
           <OptionsList
-            onBlur={() => {
-              setIsInputFocused(false);
-            }}
+            text={text}
+            onChange={(text) => onChange(text).then(() => setFocused(false))}
+            options={options}
+            onBlur={() => setFocused(false)}
           />
         )}
-        <div className="autocomplete__status">
-          {error && <div>Error on request</div>}
-          {loading && <div>Loading...</div>}
-        </div>
       </div>
     </div>
   );
